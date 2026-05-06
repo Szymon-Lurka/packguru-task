@@ -92,7 +92,28 @@ Decyzje projektowe w tym zadaniu:
 
 ## Zadanie 2
 
-TBD
+Do zadania 2 również został wygenerowany plik z planem implementacji - poprzedzony iteracyjną rozmową z modelem i przeglądnięciem dokumentacji biblioteki `force-graph`.
+
+Sama rozmowa jak i plan odbyły się poprawnie - natomiast sam proces implementacji przez model był rozczarowujący.
+
+Właściwie większość początkowych rozwiązań modelu były wątpliwej jakości, nadmiarowy kod, sporo code smell (przykładowo logika rozrzucona po 2-3 onMounted w komponencie, nadmiarowe funkcje totalnie ignorując chociażby YAGNI).
+
+UX'owo było źle, agent nie respektował dokumentacji, 2 próby stworzenia custom funkcji która obsłuży przypadek braku odświeżania grafu po wyborze startowego i końcowego węzła w momencie kiedy prosta konfiguracja biblioteki rozwiązywała ten problem.
+
+Zastosowałem tutaj 'mieszane' podejście - przeszedłem na analizę i refinement z modelem od Google Gemini.
+
+Udało się dojść do kluczowych wniosków i ważnych aspektów (UX w kontekście tego konkretnego grafu oraz większej wiedzy odnośnie biblioteki).
+Kontekst zbudowany po tej rozmowie pozwolił na sensowną implementacje algorytmu, odpowiednio zaadaptować UX do projektu i pozbyć się code smell.
+
+Implementacja tego zadania wymagała kilka iteracji oraz zaczynania sesji od nowa, ze świeżym kontekstem bez szumu informacyjnego.
+
+Decyzje projektowe w tym zadaniu:
+- Mimo, że algorytm BSF jest nieskierowany, strzałki zostały na miejscu jako łagodny indicator przypominający, że kierunek ma znaczenie w tym grafie
+- Dodanie prostego button'a do overlay'a informującego o braku ścieżki w wybranych węzłach, który resetuje stan i można zacząć od nowa
+- Większość logiki przeniesiona do composable w celu organizacji kodu, w komponencie została
+- Startowy węzeł oraz końcowy mają inny kolor obramowania, w celu wyróżnienia krawędzi ścieżki
+- Zauważyłem problem przy renderowaniu grafu - w momencie kiedy klikamy na węzeł i wysuwa się drawer. Ale nie naprawiłem go w ramach zadań rekrutacyjnych. Prawdopodobnie podczas animacji robi on resize, a komponent z grafem reaguje na resize i powoduje ten flick.
+- Dodanie mini instrukcji informującej o następnym kroku w path mode
 
 ## Zadanie 3
 

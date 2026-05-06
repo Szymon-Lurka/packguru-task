@@ -44,6 +44,15 @@
     "colLang": "Lang",
     "loading": "Loading…"
   },
+  "graph": {
+    "pathToggle": "Path",
+    "pathToggleTitle": "Toggle path mode",
+    "pathPickStart": "Pick a start node",
+    "pathPickEnd": "Pick an end node",
+    "noPathFound": "No path found",
+    "resetSelection": "Reset selection",
+    "resetSelectionTitle": "Reset path selection"
+  },
   "common": {
     "emDash": "—"
   }

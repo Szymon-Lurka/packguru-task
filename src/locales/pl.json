@@ -44,6 +44,15 @@
     "colLang": "Język",
     "loading": "Ładowanie…"
   },
+  "graph": {
+    "pathToggle": "Ścieżka",
+    "pathToggleTitle": "Przełącz tryb ścieżki",
+    "pathPickStart": "Wybierz węzeł startowy",
+    "pathPickEnd": "Wybierz węzeł końcowy",
+    "noPathFound": "Nie znaleziono ścieżki",
+    "resetSelection": "Resetuj wybór",
+    "resetSelectionTitle": "Resetuj wybór ścieżki"
+  },
   "common": {
     "emDash": "—"
   }

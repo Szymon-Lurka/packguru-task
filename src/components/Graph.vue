@@ -1,16 +1,79 @@
-<!--
-  Task 2 — Algorithm: see the TODO block inside <script setup>.
--->
 <template>
-  <div ref="containerEl" style="width:100%;height:100%" />
+  <div class="graph-root">
+    <div class="graph-overlay-controls">
+      <button
+        class="graph-path-btn"
+        :class="{ active: pathMode }"
+        type="button"
+        :title="t('graph.pathToggleTitle')"
+        :aria-label="t('graph.pathToggleTitle')"
+        @click="togglePathMode"
+      >
+        {{ t('graph.pathToggle') }}
+      </button>
+      <div v-if="pathHint" class="graph-overlay-hint">
+        {{ pathHint }}
+      </div>
+    </div>
+
+    <div v-if="pathNotFound" class="graph-overlay-message">
+      <div class="graph-overlay-message-text">{{ t('graph.noPathFound') }}</div>
+      <button
+        class="graph-overlay-btn"
+        type="button"
+        :title="t('graph.resetSelectionTitle')"
+        :aria-label="t('graph.resetSelectionTitle')"
+        @click="clearPathSelection"
+      >
+        {{ t('graph.resetSelection') }}
+      </button>
+    </div>
+
+    <div ref="containerEl" class="graph-canvas" />
+  </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import ForceGraph from 'force-graph'
+import { useI18n } from 'vue-i18n'
 import { TYPE_COLORS } from '../utils/types.js'
+import { useGraphPath } from '../composables/useGraphPath.js'
 
-const DEFAULT_COLOR = '#95a5a6'
+const COLORS = {
+  canvasBg: '#1a1a2e',
+  nodeDefault: '#95a5a6',
+
+  linkDefault: '#334455',
+  linkDim: 'rgba(51,68,85,0.18)',
+  linkPath: 'rgba(232,232,232,0.92)',
+
+  ringSelected: '#ffffff',
+  ringPathMid: '#ffffff',
+  ringPathEndpoint: '#ff6b6b',
+  ringPathStart: '#55d98a',
+  ringPathEnd: '#ff6b6b',
+
+  label: 'rgba(220,220,220,0.85)',
+  arrowDim: 'rgba(140,150,165,0.22)',
+  arrowDefault: '#334455',
+
+  overlayBg: 'rgba(15, 52, 96, 0.65)',
+  overlayBorder: 'rgba(26, 74, 128, 0.7)',
+  overlayText: '#e8e8e8',
+}
+
+const SIZES = {
+  dimAlpha: 0.2,
+  nodeR: 4,
+  nodeSelectedR: 7,
+  ringGap: 2.5,
+  ringWidth: 1.5,
+  arrowLen: 3,
+  arrowLenPath: 5,
+  linkWidth: 1,
+  linkWidthPath: 2.5,
+}
 
 const props = defineProps({
   data:         { type: Object, default: () => ({ nodes: [], links: [] }) },
@@ -19,35 +82,124 @@ const props = defineProps({
   // filterQuery: { type: String, default: '' },
 })
 const emit = defineEmits(['select'])
+const { t } = useI18n()
 
 const containerEl = ref(null)
 let fg = null
 
+const pathHint = computed(() => {
+  if (!pathMode.value) return ''
+  if (!pathStart.value) return t('graph.pathPickStart')
+  if (!pathEnd.value) return t('graph.pathPickEnd')
+  return ''
+})
+
+const {
+  pathMode,
+  pathStart,
+  pathEnd,
+  pathNodes,
+  pathLinks,
+  pathNotFound,
+  togglePathMode: togglePathModeInternal,
+  onNodeClick: onPathNodeClick,
+  deactivate: deactivatePath,
+  clearPathSelection,
+  slugOf,
+  linkKey,
+} = useGraphPath(computed(() => props.data))
+
 function nodeColor(node) {
-  return TYPE_COLORS[node.type] || DEFAULT_COLOR
+  return TYPE_COLORS[node.type] || COLORS.nodeDefault
+}
+
+function isPathResultActive() {
+  return !!(pathMode.value && pathStart.value && pathEnd.value)
+}
+
+function isPathLink(link) {
+  const a = slugOf(link.source)
+  const b = slugOf(link.target)
+  const key = linkKey(a, b)
+  if (!key) return false
+  return pathLinks.value.has(key)
+}
+
+function togglePathMode() {
+  togglePathModeInternal({
+    onEnter() {
+      // UX: entering Path mode should not compete with the details drawer.
+      // Close the drawer by clearing selection in the parent.
+      emit('select', null)
+    },
+  })
+}
+
+function onNodeClick(node) {
+  const slug = node?.slug
+  if (!slug) return
+
+  if (!pathMode.value) {
+    emit('select', slug)
+    return
+  }
+
+  onPathNodeClick(slug)
+}
+
+function onKeydown(e) {
+  if (!pathMode.value) return
+  if (e.key !== 'Escape') return
+  deactivatePath()
 }
 
 onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+
   fg = ForceGraph()(containerEl.value)
     .graphData(props.data)
     .nodeId('slug')
     .nodeLabel('title')
-    .linkColor(() => '#334455')
-    .linkWidth(1)
-    .linkDirectionalArrowLength(3)
+    .autoPauseRedraw(false)
+    .linkColor(link => {
+      if (!isPathResultActive()) return COLORS.linkDefault
+      return isPathLink(link) ? COLORS.linkPath : COLORS.linkDim
+    })
+    .linkWidth(link => {
+      if (!isPathResultActive()) return SIZES.linkWidth
+      return isPathLink(link) ? SIZES.linkWidthPath : SIZES.linkWidth
+    })
+    .linkDirectionalArrowColor(link => {
+      if (!isPathResultActive()) return COLORS.arrowDefault
+      return isPathLink(link) ? COLORS.linkPath : COLORS.arrowDim
+    })
+    .linkDirectionalArrowLength(link => {
+      if (!isPathResultActive()) return SIZES.arrowLen
+      return isPathLink(link) ? SIZES.arrowLenPath : SIZES.arrowLen
+    })
     .linkDirectionalArrowRelPos(1)
     .linkLabel('label')
-    .backgroundColor('#1a1a2e')
-    .onNodeClick(node => emit('select', node.slug))
+    .backgroundColor(COLORS.canvasBg)
+    .onNodeClick(onNodeClick)
     .nodeCanvasObject((node, ctx, globalScale) => {
       const isSelected = node.slug === props.selectedSlug
+      const isPathMode = pathMode.value && pathStart.value
+      const hasPathEndpoints = pathMode.value && pathStart.value && pathEnd.value
+      const isPathPicking = pathMode.value && pathStart.value && !pathEnd.value
+      const isStart = isPathMode && node.slug === pathStart.value
+      const isEnd = isPathMode && node.slug === pathEnd.value
+      const isOnPath = isPathMode && pathNodes.value.has(node.slug)
+      const isPathHighlight = isStart || isEnd || isOnPath
+
       // Task 3: compute match opacity here using props.filterQuery
       // const isMatch = !props.filterQuery ||
       //   node.title.toLowerCase().includes(props.filterQuery.toLowerCase())
       // ctx.globalAlpha = isMatch ? 1 : 0.15
 
+      if (hasPathEndpoints) ctx.globalAlpha = isPathHighlight ? 1 : SIZES.dimAlpha
+
       const color = nodeColor(node)
-      const r = isSelected ? 7 : 4
+      const r = isSelected ? SIZES.nodeSelectedR : SIZES.nodeR
 
       ctx.beginPath()
       ctx.arc(node.x, node.y, r, 0, 2 * Math.PI)
@@ -56,21 +208,34 @@ onMounted(() => {
 
       if (isSelected) {
         ctx.beginPath()
-        ctx.arc(node.x, node.y, r + 2.5, 0, 2 * Math.PI)
-        ctx.strokeStyle = '#ffffff'
-        ctx.lineWidth = 1.5
+        ctx.arc(node.x, node.y, r + SIZES.ringGap, 0, 2 * Math.PI)
+        ctx.strokeStyle = COLORS.ringSelected
+        ctx.lineWidth = SIZES.ringWidth
+        ctx.stroke()
+      }
+
+      if ((hasPathEndpoints || isPathPicking) && isPathHighlight) {
+        const ringColor = isStart
+          ? COLORS.ringPathStart
+          : (isEnd ? COLORS.ringPathEnd : COLORS.ringPathMid)
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, r + SIZES.ringGap, 0, 2 * Math.PI)
+        ctx.strokeStyle = ringColor
+        ctx.lineWidth = SIZES.ringWidth
         ctx.stroke()
       }
 
       if (globalScale >= 1.2) {
         const fontSize = Math.min(12 / globalScale, 3)
         ctx.font = `${fontSize}px Sans-Serif`
-        ctx.fillStyle = 'rgba(220,220,220,0.85)'
+        ctx.fillStyle = COLORS.label
         ctx.textAlign = 'center'
-        ctx.fillText(node.title, node.x, node.y + r + fontSize + 1)
+        const ringPad = (isSelected || isPathHighlight) ? 5 : 1
+        ctx.fillText(node.title, node.x, node.y + r + ringPad + fontSize + 1)
       }
 
       // Task 3: reset ctx.globalAlpha = 1 after drawing each node
+      ctx.globalAlpha = 1
     })
     .nodeCanvasObjectMode(() => 'replace')
 
@@ -85,11 +250,17 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
   fg?.pauseAnimation()
   fg = null
 })
 
-watch(() => props.data, d => fg?.graphData(d))
+watch(() => props.data, d => {
+  fg?.graphData(d)
+  if (pathMode.value) {
+    deactivatePath()
+  }
+})
 
 watch(() => props.selectedSlug, slug => {
   if (!slug || !fg) return
@@ -97,25 +268,4 @@ watch(() => props.selectedSlug, slug => {
   if (node?.x != null) fg.centerAt(node.x, node.y, 400)
 })
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TODO Task 2 — Shortest Path (BFS)
-//
-// Add a "Path" toggle button (above or overlaid on the graph). When active:
-//
-//   1. Track a `pathStart` and `pathEnd` slug via two successive node clicks.
-//   2. Build an adjacency list from props.data.links (treat edges as undirected).
-//   3. Run BFS from pathStart to pathEnd; record the predecessor map to
-//      reconstruct the path.
-//   4. Expose the path as a Set of slugs and a Set of link ids.
-//   5. In nodeCanvasObject: full opacity + bright ring for path nodes;
-//      dim (opacity 0.2) for all others.
-//   6. In linkColor / linkWidth: highlight path edges; dim the rest.
-//   7. If no path exists, show a "No path found" overlay.
-//   8. Toggling Path Mode off resets all state.
-//
-// Constraints worth thinking about:
-//   • force-graph mutates link objects (source/target become node refs).
-//     Your adjacency list must handle both string slugs and node objects.
-//   • BFS on the canvas thread is synchronous; keep it O(V + E).
-// ─────────────────────────────────────────────────────────────────────────────
 </script>
