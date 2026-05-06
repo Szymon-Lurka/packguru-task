@@ -1,0 +1,50 @@
+{
+  "locale": {
+    "switchLabel": "Język"
+  },
+  "app": {
+    "title": "Graf wiedzy Wiki",
+    "tabGraph": "Graf",
+    "tabSources": "Pliki źródłowe",
+    "statusChunks": "Brak węzłów | {n} węzeł | {n} węzły | {n} węzłów",
+    "statusLinks": "Brak powiązań | {n} powiązanie | {n} powiązania | {n} powiązań",
+    "loading": "Ładowanie…",
+    "emptySelectNode": "Wybierz węzeł, aby zobaczyć szczegóły"
+  },
+  "chunk": {
+    "closeTitle": "Zamknij",
+    "relatedChunks": "Powiązane fragmenty",
+    "linksTo": "Powiązania do",
+    "referencedBy": "Powiązania od",
+    "sources": "Źródła",
+    "partWord": "Część",
+    "types": {
+      "process_stage": "Etap procesu",
+      "machine_element": "Element maszyny",
+      "machine_part": "Część maszyny",
+      "procedure": "Procedura",
+      "concept": "Pojęcie"
+    }
+  },
+  "part": {
+    "badge": "Fragment źródła",
+    "closeTitle": "Zamknij",
+    "partWord": "Część"
+  },
+  "sources": {
+    "fileCount": "{n} plik źródłowy | {n} pliki źródłowe | {n} plików źródłowych",
+    "partCount": "{n} część | {n} części | {n} części",
+    "metaPath": "Ścieżka",
+    "metaSha256": "SHA-256",
+    "colNumber": "#",
+    "colTitle": "Tytuł",
+    "colStart": "Początek",
+    "colEnd": "Koniec",
+    "colDuration": "Czas trwania",
+    "colLang": "Język",
+    "loading": "Ładowanie…"
+  },
+  "common": {
+    "emDash": "—"
+  }
+}

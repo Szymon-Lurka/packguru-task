@@ -34,15 +34,60 @@ body {
 }
 
 .app-header h1 {
+  flex: 0 0 14rem;
+  width: 21rem;
+  min-width: 14rem;
+  max-width: 14rem;
   font-size: 16px;
   font-weight: 600;
+  line-height: 1.25;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-header-end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.app-header-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 2px 0;
+  background: #0f3460;
+  flex-shrink: 0;
+}
+
+.locale-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.locale-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: #888;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s, border-color 0.1s;
+}
+.locale-btn:hover { color: #ccc; }
+.locale-btn.active {
+  background: #0f3460;
+  border-color: #1a4a80;
+  color: #e8e8e8;
 }
 
 .status {
   font-size: 12px;
   color: #666;
-  margin-left: auto;
   white-space: nowrap;
 }
 
@@ -51,6 +96,7 @@ body {
 .tabs {
   display: flex;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .tab {
@@ -351,7 +397,17 @@ a {
 
 .mono { font-family: 'SF Mono', 'Fira Mono', monospace; font-size: 11px; }
 
-.parts-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.parts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: fixed;
+}
+
+.parts-table col.parts-col--num { width: 4%; }
+.parts-table col.parts-col--title { width: 44%; }
+.parts-table col.parts-col--time { width: 14%; }
+.parts-table col.parts-col--lang { width: 10%; }
 
 .parts-table th {
   text-align: left;
@@ -362,6 +418,8 @@ a {
   letter-spacing: 0.4px;
   padding: 5px 10px 5px 0;
   border-bottom: 1px solid #0f3460;
+  vertical-align: bottom;
+  word-break: break-word;
 }
 
 .parts-table td {
@@ -369,6 +427,11 @@ a {
   color: #ccc;
   border-bottom: 1px solid #0a1830;
   vertical-align: top;
+}
+
+.parts-table td:nth-child(2) {
+  min-width: 0;
+  word-break: break-word;
 }
 
 .parts-table tr:last-child td { border-bottom: none; }

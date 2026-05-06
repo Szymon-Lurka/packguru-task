@@ -1,19 +1,16 @@
-<!--
-  Task 1 — Refactoring:
-    • fmtTime() is duplicated here, in ChunkPanel.vue, and in PartPanel.vue.
-      Extract to src/utils/format.js and import it.
--->
 <template>
   <div class="app-body">
     <div class="sources-view">
-      <div class="sources-header">{{ sources.length }} source file{{ sources.length !== 1 ? 's' : '' }}</div>
+      <div class="sources-header">
+        {{ t('sources.fileCount', sources.length, { n: sources.length }) }}
+      </div>
       <div class="sources-list">
         <div v-for="s in sources" :key="s.source_name" class="source-card">
           <button class="source-card-header" @click="toggle(s.source_name)">
             <div class="source-card-title">
               <span class="source-card-name">{{ s.source_name }}</span>
               <span class="source-card-meta">
-                {{ s.source_part_count }} part{{ s.source_part_count !== 1 ? 's' : '' }}
+                {{ t('sources.partCount', s.source_part_count, { n: s.source_part_count }) }}
                 <template v-if="s.processor"> · {{ s.processor }} {{ s.processor_version }}</template>
                 · {{ fmtDate(s.processed_at) }}
               </span>
@@ -24,19 +21,32 @@
           <div v-if="expanded[s.source_name]" class="source-card-body">
             <div class="source-meta-grid">
               <template v-if="s.source_path">
-                <span class="meta-label">Path</span>
+                <span class="meta-label">{{ t('sources.metaPath') }}</span>
                 <span class="meta-value">{{ s.source_path }}</span>
               </template>
               <template v-if="s.source_sha256">
-                <span class="meta-label">SHA-256</span>
+                <span class="meta-label">{{ t('sources.metaSha256') }}</span>
                 <span class="meta-value mono">{{ s.source_sha256 }}</span>
               </template>
             </div>
 
             <table v-if="s.parts.length" class="parts-table">
+              <colgroup>
+                <col class="parts-col--num">
+                <col class="parts-col--title">
+                <col class="parts-col--time">
+                <col class="parts-col--time">
+                <col class="parts-col--time">
+                <col class="parts-col--lang">
+              </colgroup>
               <thead>
                 <tr>
-                  <th>#</th><th>Title</th><th>Start</th><th>End</th><th>Duration</th><th>Lang</th>
+                  <th>{{ t('sources.colNumber') }}</th>
+                  <th>{{ t('sources.colTitle') }}</th>
+                  <th>{{ t('sources.colStart') }}</th>
+                  <th>{{ t('sources.colEnd') }}</th>
+                  <th>{{ t('sources.colDuration') }}</th>
+                  <th>{{ t('sources.colLang') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -48,10 +58,10 @@
                 >
                   <td class="mono">{{ p.part_index }}</td>
                   <td>{{ p.title }}</td>
-                  <td class="mono">{{ fmtTime(p.start_seconds) ?? '—' }}</td>
-                  <td class="mono">{{ fmtTime(p.end_seconds) ?? '—' }}</td>
-                  <td class="mono">{{ fmtTime(p.duration_seconds) ?? '—' }}</td>
-                  <td>{{ p.language ?? '—' }}</td>
+                  <td class="mono">{{ fmtTime(p.start_seconds) ?? t('common.emDash') }}</td>
+                  <td class="mono">{{ fmtTime(p.end_seconds) ?? t('common.emDash') }}</td>
+                  <td class="mono">{{ fmtTime(p.duration_seconds) ?? t('common.emDash') }}</td>
+                  <td>{{ p.language ?? t('common.emDash') }}</td>
                 </tr>
               </tbody>
             </table>
@@ -61,7 +71,7 @@
     </div>
 
     <div :class="['detail-pane', { open: !!selectedPart }]">
-      <div v-if="partLoading" class="panel-loading">Loading…</div>
+      <div v-if="partLoading" class="panel-loading">{{ t('sources.loading') }}</div>
       <PartPanel
         v-else-if="partData"
         :part="partData"
@@ -73,26 +83,22 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { sources, getPart } from '../data/mock.js'
 import PartPanel from './PartPanel.vue'
+import { fmtTime } from '../utils/format.js'
 
-// Task 1: extract to src/utils/format.js (also in ChunkPanel.vue and PartPanel.vue)
-function fmtTime(secs) {
-  if (secs == null) return null
-  const m = Math.floor(secs / 60)
-  const s = Math.floor(secs % 60)
-  return `${m}:${String(s).padStart(2, '0')}`
-}
+const { t, locale } = useI18n()
 
 function fmtDate(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString()
+  if (!iso) return t('common.emDash')
+  return new Date(iso).toLocaleString(locale.value)
 }
 
-const expanded    = ref({})
+const expanded     = ref({})
 const selectedPart = ref(null)
-const partData    = ref(null)
-const partLoading = ref(false)
+const partData     = ref(null)
+const partLoading  = ref(false)
 
 function toggle(name) {
   expanded.value[name] = !expanded.value[name]

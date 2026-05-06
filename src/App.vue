@@ -1,14 +1,22 @@
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>Wiki Knowledge Graph</h1>
+      <h1>{{ t('app.title') }}</h1>
       <nav class="tabs">
-        <button :class="['tab', { active: tab === 'graph' }]" @click="tab = 'graph'">Graph</button>
-        <button :class="['tab', { active: tab === 'sources' }]" @click="tab = 'sources'">Source Files</button>
+        <button :class="['tab', { active: tab === 'graph' }]" @click="tab = 'graph'">
+          {{ t('app.tabGraph') }}
+        </button>
+        <button :class="['tab', { active: tab === 'sources' }]" @click="tab = 'sources'">
+          {{ t('app.tabSources') }}
+        </button>
       </nav>
-      <span v-if="tab === 'graph'" class="status">
-        {{ graphData.nodes.length }} chunks · {{ graphData.links.length }} links
-      </span>
+      <div class="app-header-end">
+        <template v-if="tab === 'graph'">
+          <span class="status">{{ graphStatusLine }}</span>
+          <span class="app-header-divider" aria-hidden="true" />
+        </template>
+        <LocaleSwitcher />
+      </div>
 
       <!--
         TODO Task 3 — Live Graph Search
@@ -31,14 +39,14 @@
         />
       </div>
       <div :class="['detail-pane', { open: !!selectedSlug }]">
-        <div v-if="chunkLoading" class="panel-loading">Loading…</div>
+        <div v-if="chunkLoading" class="panel-loading">{{ t('app.loading') }}</div>
         <ChunkPanel
           v-else-if="chunk"
           :chunk="chunk"
           @navigate="selectedSlug = $event"
           @close="selectedSlug = null"
         />
-        <div v-else class="empty-state">Select a node to explore</div>
+        <div v-else class="empty-state">{{ t('app.emptySelectNode') }}</div>
       </div>
     </div>
 
@@ -47,16 +55,31 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, watchEffect, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { graphData, getChunk } from './data/mock.js'
 import Graph from './components/Graph.vue'
 import ChunkPanel from './components/ChunkPanel.vue'
 import SourcesView from './components/SourcesView.vue'
+import LocaleSwitcher from './components/LocaleSwitcher.vue'
+
+const { t, locale } = useI18n()
+
+const graphStatusLine = computed(() => {
+  const nc = graphData.nodes.length
+  const nl = graphData.links.length
+  return `${t('app.statusChunks', nc, { n: nc })} · ${t('app.statusLinks', nl, { n: nl })}`
+})
 
 const tab = ref('graph')
 const selectedSlug = ref(null)
 const chunk = ref(null)
 const chunkLoading = ref(false)
+
+watchEffect(() => {
+  document.title = t('app.title')
+  document.documentElement.lang = locale.value
+})
 
 function onSelect(slug) {
   selectedSlug.value = selectedSlug.value === slug ? null : slug
