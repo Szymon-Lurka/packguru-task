@@ -53,6 +53,13 @@
     "resetSelection": "Resetuj wybór",
     "resetSelectionTitle": "Resetuj wybór ścieżki"
   },
+  "search": {
+    "placeholder": "Szukaj w grafie…",
+    "ariaLabel": "Szukaj w grafie",
+    "clearTitle": "Wyczyść wyszukiwanie",
+    "matches": "Brak dopasowań | {n} dopasowanie | {n} dopasowania | {n} dopasowań",
+    "matchesShort": "{n}"
+  },
   "common": {
     "emDash": "—"
   }

@@ -53,6 +53,7 @@ const COLORS = {
   ringPathEndpoint: '#ff6b6b',
   ringPathStart: '#55d98a',
   ringPathEnd: '#ff6b6b',
+  ringSearch: '#7db3f7',
 
   label: 'rgba(220,220,220,0.85)',
   arrowDim: 'rgba(140,150,165,0.22)',
@@ -78,10 +79,9 @@ const SIZES = {
 const props = defineProps({
   data:         { type: Object, default: () => ({ nodes: [], links: [] }) },
   selectedSlug: { type: String, default: null },
-  // Task 3: add filterQuery prop here and use it in nodeCanvasObject
-  // filterQuery: { type: String, default: '' },
+  filterQuery:  { type: String, default: '' },
 })
-const emit = defineEmits(['select'])
+const emit = defineEmits(['select', 'matches-change'])
 const { t } = useI18n()
 
 const containerEl = ref(null)
@@ -116,6 +116,43 @@ function nodeColor(node) {
 function isPathResultActive() {
   return !!(pathMode.value && pathStart.value && pathEnd.value)
 }
+
+function norm(s) {
+  return String(s || '').trim().toLowerCase()
+}
+
+function isNodeMatch(node, qRaw) {
+  const q = norm(qRaw)
+  if (!q) return true
+  return (
+    norm(node?.title).includes(q) ||
+    norm(node?.slug).includes(q) ||
+    norm(node?.type).includes(q)
+  )
+}
+
+function nodeAlpha({
+  isSelected,
+  hasPathEndpoints,
+  isPathHighlight,
+  queryActive,
+  isMatch,
+  isPathActive,
+}) {
+  if (hasPathEndpoints) return (isPathHighlight || isSelected) ? 1 : SIZES.dimAlpha
+  if (!isPathActive && queryActive) return (isMatch || isSelected) ? 1 : SIZES.dimAlpha
+  return 1
+}
+
+const matchCount = computed(() => {
+  const q = norm(props.filterQuery)
+  if (!q) return 0
+  return props.data.nodes.reduce((acc, n) => acc + (isNodeMatch(n, q) ? 1 : 0), 0)
+})
+
+watch(matchCount, n => {
+  emit('matches-change', n)
+}, { immediate: true })
 
 function isPathLink(link) {
   const a = slugOf(link.source)
@@ -191,12 +228,18 @@ onMounted(() => {
       const isOnPath = isPathMode && pathNodes.value.has(node.slug)
       const isPathHighlight = isStart || isEnd || isOnPath
 
-      // Task 3: compute match opacity here using props.filterQuery
-      // const isMatch = !props.filterQuery ||
-      //   node.title.toLowerCase().includes(props.filterQuery.toLowerCase())
-      // ctx.globalAlpha = isMatch ? 1 : 0.15
+      const queryActive = !!norm(props.filterQuery)
+      const isMatch = isNodeMatch(node, props.filterQuery)
+      const isPathActive = !!pathMode.value
 
-      if (hasPathEndpoints) ctx.globalAlpha = isPathHighlight ? 1 : SIZES.dimAlpha
+      ctx.globalAlpha = nodeAlpha({
+        isSelected,
+        hasPathEndpoints,
+        isPathHighlight,
+        queryActive,
+        isMatch,
+        isPathActive,
+      })
 
       const color = nodeColor(node)
       const r = isSelected ? SIZES.nodeSelectedR : SIZES.nodeR
@@ -225,6 +268,15 @@ onMounted(() => {
         ctx.stroke()
       }
 
+      if (queryActive && isMatch && !isSelected) {
+        ctx.beginPath()
+        const ringExtra = isPathHighlight ? 2 : 0
+        ctx.arc(node.x, node.y, r + SIZES.ringGap + ringExtra, 0, 2 * Math.PI)
+        ctx.strokeStyle = COLORS.ringSearch
+        ctx.lineWidth = 1
+        ctx.stroke()
+      }
+
       if (globalScale >= 1.2) {
         const fontSize = Math.min(12 / globalScale, 3)
         ctx.font = `${fontSize}px Sans-Serif`
@@ -234,7 +286,6 @@ onMounted(() => {
         ctx.fillText(node.title, node.x, node.y + r + ringPad + fontSize + 1)
       }
 
-      // Task 3: reset ctx.globalAlpha = 1 after drawing each node
       ctx.globalAlpha = 1
     })
     .nodeCanvasObjectMode(() => 'replace')

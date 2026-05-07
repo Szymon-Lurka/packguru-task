@@ -53,6 +53,13 @@
     "resetSelection": "Reset selection",
     "resetSelectionTitle": "Reset path selection"
   },
+  "search": {
+    "placeholder": "Search graph…",
+    "ariaLabel": "Search graph",
+    "clearTitle": "Clear search",
+    "matches": "No matches | {n} match | {n} matches",
+    "matchesShort": "{n}"
+  },
   "common": {
     "emDash": "—"
   }

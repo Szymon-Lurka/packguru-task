@@ -117,4 +117,22 @@ Decyzje projektowe w tym zadaniu:
 
 ## Zadanie 3
 
-TBD
+Standardowo wygenerowanie pliku implementacji i sesja refinementu z agentem w celu wypracowania optymalnej współpracy poprzedniego zadania z aktualnym.
+
+Agent został użyty do zaimplementowania podstawowej struktury (input, przekazywanie props, tłumaczenia, debounce) a następnie został pokierowany dokładnymi instrukcjami odnośnie priorytetów wyświetlania (path mode nad wyszukiwarką) oraz UX (search badge z liczbą dopasowań).
+
+Poradził sobie sensownie bez zbędnych iteracji.
+
+Decyzje projektowe:
+- Badge number jako wskaźnik dopasowań wbudowany w input
+- Przy aktywnym path mode, search ma mniejszy priorytet. Jeśli znaleziony węzeł jest poza narysowaną ścieżką, to dalej ma rysowany ring ale jest wyszarzony jak reszta. Jeśli znajduje się on w ścieżce, to ma dodatkowy, subtelny ring w kolorze który identyfikuje znalezione węzły
+
+## Weryfikacja
+
+Zweryfikowanie poprawności implementacji polegała na wykorzystaniu planu który stworzył agent, na podstawie stworzonych dokumentów, kodu oraz `readme.md` zwrócił gotową, sensowną listę kroków do weryfikacji.
+
+Weryfikacja polegała na smoke testach w przeglądarce do czego wykorzystałem pomoc toola dla Cursora, pozwalający mu samodzielnie odwiedzić stronę i się po niej przeklikać.
+
+Ten tool nie jest zawsze stabilny, dlatego postawiłem na hybrydę i testy przeprowadziłem również ręcznie. Do tego weryfikacja osobnym agentem w świeżej sesji code review - dając mu do dyspozycji kontekst wcześniej wygenerowanych plików, `readme`, samego kodu oraz podsumowania po smoke testach.
+
+Niepowiązane poprawki odrzuciłem, a te które uznałem za stosowne zaimplementowałem korzystając z kolejnego agenta, dedykowanemu takim zadaniom.

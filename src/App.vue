@@ -12,8 +12,42 @@
       </nav>
       <div class="app-header-end">
         <template v-if="tab === 'graph'">
-          <span class="status">{{ graphStatusLine }}</span>
+          <div class="graph-search" :class="{ active: !!graphSearchQuery }">
+            <div class="graph-search-input-wrap">
+              <input
+                ref="graphSearchEl"
+                v-model="graphSearchQuery"
+                class="graph-search-input"
+                type="text"
+                name="graph-search"
+                role="search"
+                autocomplete="off"
+                spellcheck="false"
+                :placeholder="t('search.placeholder')"
+                :aria-label="t('search.ariaLabel')"
+              >
+              <span
+                v-if="graphSearchQueryDebounced"
+                class="graph-search-badge"
+                :title="t('search.matches', graphSearchMatchCount, { n: graphSearchMatchCount })"
+                :aria-label="t('search.matches', graphSearchMatchCount, { n: graphSearchMatchCount })"
+              >
+                {{ t('search.matchesShort', graphSearchMatchCount, { n: graphSearchMatchCount }) }}
+              </span>
+              <button
+                v-if="graphSearchQuery"
+                class="graph-search-clear"
+                type="button"
+                :title="t('search.clearTitle')"
+                :aria-label="t('search.clearTitle')"
+                @click="clearGraphSearch"
+              >
+                ×
+              </button>
+            </div>
+          </div>
           <span class="app-header-divider" aria-hidden="true" />
+          <span class="status">{{ graphStatusLine }}</span>
         </template>
         <LocaleSwitcher />
       </div>
@@ -34,7 +68,9 @@
       <div class="graph-pane">
         <Graph
           :data="graphData"
+          :filter-query="graphSearchQueryDebounced"
           :selected-slug="selectedSlug"
+          @matches-change="setGraphSearchMatchCount($event)"
           @select="onSelect"
         />
       </div>
@@ -62,6 +98,7 @@ import Graph from './components/Graph.vue'
 import ChunkPanel from './components/ChunkPanel.vue'
 import SourcesView from './components/SourcesView.vue'
 import LocaleSwitcher from './components/LocaleSwitcher.vue'
+import { useGraphSearch } from './composables/useGraphSearch.js'
 
 const { t, locale } = useI18n()
 
@@ -75,6 +112,21 @@ const tab = ref('graph')
 const selectedSlug = ref(null)
 const chunk = ref(null)
 const chunkLoading = ref(false)
+
+const isGraphTab = computed(() => tab.value === 'graph')
+const {
+  inputEl: graphSearchEl,
+  query: graphSearchQuery,
+  debouncedQuery: graphSearchQueryDebounced,
+  matchCount: graphSearchMatchCount,
+  setMatchCount: setGraphSearchMatchCount,
+  clear: clearGraphSearch,
+} = useGraphSearch({
+  isActiveRef: isGraphTab,
+  debounceMs: 250,
+  minQueryLength: 3,
+  resetOnDeactivate: true,
+})
 
 watchEffect(() => {
   document.title = t('app.title')
