@@ -136,3 +136,24 @@ Weryfikacja polegała na smoke testach w przeglądarce do czego wykorzystałem p
 Ten tool nie jest zawsze stabilny, dlatego postawiłem na hybrydę i testy przeprowadziłem również ręcznie. Do tego weryfikacja osobnym agentem w świeżej sesji code review - dając mu do dyspozycji kontekst wcześniej wygenerowanych plików, `readme`, samego kodu oraz podsumowania po smoke testach.
 
 Niepowiązane poprawki odrzuciłem, a te które uznałem za stosowne zaimplementowałem korzystając z kolejnego agenta, dedykowanemu takim zadaniom.
+
+## Usprawnienia
+
+Kod został dostosowany do aktualnego stylu projektowego, ale widzę przestrzeń na wprowadzenie usprawnień:
+
+- Dodanie TypeScript do projektu
+    - Zmniejsza ryzyko regresji przy refactorach
+    - Lepsza integracja z IDE, szybsze implementacje (większa pewność siebie i agentów AI)
+    - Można wtedy rozważyć typowanie i18n, w celu szybkiej identyfikacji brakujących kluczy oraz poprawności ich użycia 
+- Testy komponentów / integracyjne (Vue Testing Library)
+    - Weryfikacja UX (np. wskazówki “następny krok”, reset path mode, badge dopasowań, stan disabled/active).
+- Testy E2E (Playwright lub Cypress)
+    - Krytyczne ścieżki: wybór start/koniec, brak ścieżki i reset, zmiana języka bez reloadu, wyszukiwanie i podświetlanie.
+- Projektowy lint/format (ESlint + prettier)
+    - Jednolite zasady stylistyczne i jakościowe + automatyczny format (potencjalnie w pre-commit np. Husky lint-staged)
+    - Wymuszanie praktyk projektowych (np. reguły dotyczące `vue script setup` itd)
+- Testy jednostkowe (Vitest)
+    - Testy dla logiki w composables, formatowania czasu/daty, zachowań i18n (pluralizacja, fallbacki, brak klucza)
+    - Testy komponentów / integracyjne
+    - Testy E2E krytycznych ścieżek, współpraca np. wyszukiwarki z path mode
+- Style (S)CSS globalnie tylko współdzielone, konfiguracyjne - a większość scoped dla danych komponentów, w jednym pliku lub potencjalnie jako osobny plik ze stylami dla konkretnego komponentu (szczególnie w połączeniu z podejściem np. komponentów Base, reużywalnych)
